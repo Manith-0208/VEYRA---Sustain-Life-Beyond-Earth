@@ -1,111 +1,127 @@
-# VEYRA – Sustain Life Beyond Earth 🌕🚀
+# MISSION VOID
 
-**NASA Space Apps Challenge 2026**
+A React + Vite lunar outpost simulation.
 
-**Team Name:** Mission Void  
-**Project Name:** VEYRA – Sustain Life Beyond Earth
+## Run on Windows
+
+1. Extract this ZIP.
+2. Open the extracted `mv_work` folder in VS Code.
+3. Open Terminal → New Terminal.
+4. Run:
+
+   ```powershell
+   npm install
+   npm run dev
+   ```
+
+5. Open the local URL printed by Vite (normally http://localhost:5173/).
+
+## What was corrected
+
+The original archive contained only the React application source file. This archive includes the Vite project files needed to run it, plus a global CSS reset that removes the default Vite `#root` max-width, centered margin, and padding. That default styling was constraining the game interface to a narrow column.
 
 
+## Hero intro and game launch
 
- # 🌍 About the Project
+The animated MISSION VOID hero intro is now the default homepage (`index.html`). After running `npm run dev`, open `http://localhost:5173/` to see it. The **START MISSION** button opens the lunar outpost simulation at `/outpost.html`.
 
-VEYRA is an interactive lunar settlement and survival simulation designed to explore the challenges of establishing and sustaining human life beyond Earth.
+The original React/Vite game entry page is preserved as `outpost.html`. The intro is also included separately as `mission-void-hero-intro.html`.
 
-The project allows users to experience the process of developing a lunar base, managing limited resources, completing missions, and upgrading infrastructure to create a sustainable settlement on the Moon.
 
-Our goal is to make the challenges of space exploration and lunar habitation interactive, engaging, and educational.
+## How to play (made for ages 7-12)
 
-# 🎯 Problem Statement
+The astronaut only moves when **you** move him. Nothing runs by itself any more.
 
-Establishing a sustainable human presence beyond Earth requires careful planning, resource management, infrastructure development, and the ability to overcome environmental challenges.
+- **Walk:** `W A S D` or the arrow keys, or drag the round on-screen **joystick** (works with a finger or a mouse). Hold `Shift` to run.
+- **Look around:** drag the screen. Scroll or pinch to zoom. Walking is relative to the camera, so "up" always walks away from you.
+- **Missions:** the 30 missions (6 chapters x 5) are done by walking to the **glowing ring** that marks each objective. A floating **yellow arrow** above the astronaut points the way. Stand inside the ring until it turns **green** and the progress bar fills.
+- **Rover:** stand next to the rover and press `E` (or tap the big button) to hop in. Steer it with the same keys / joystick. Press `E` again to hop out. Objectives that say "drive" need the rover, and the others are done on foot.
+- Buildings and rocks are solid, and the edge of the Moon stops you from wandering off.
+- **My Missions** (button on the right, or the card at the bottom-left of the 3D view) shows the current mission, the next mission and the completed ones. It can pause the game; closing it never restarts anything.
+- Progress (chapter, mission, objective, completed list, unpaid rewards) is saved in browser local storage. Coins and science points are paid once per mission when it completes.
+- A "How to play" screen appears when the game opens. Tapping **Let's go!** starts the game and lets ORION speak (browsers need one click first).
 
-Understanding these challenges is important for preparing for future lunar exploration and long-term human habitation in space.
+## ORION voice companion
 
-# 💡 Our Solution
+ORION is a friendly robot buddy who talks the player through every mission (browser speech synthesis, so an
+available system voice is needed). He reads each objective out loud, cheers when an objective is finished, nudges the
+player with a hint if they wander for a while, and congratulates them when a mission is complete.
 
-VEYRA provides an interactive lunar settlement experience where users start with a basic module and gradually develop their lunar base.
+- **Voice: ON / OFF** mutes or unmutes ORION.
+- **🎙 voice style** cycles **Friendly** (default, warm and slightly slower for kids), **Robot** and **Squeaky**, and plays a sample. The choice is remembered.
 
-Users can:
+## Files added or changed
 
-- Build and upgrade lunar infrastructure.
-- Manage resources required for construction.
-- Complete missions and side quests.
-- Earn points through activities and achievements.
-- Unlock new construction possibilities.
-- Experience the challenges of developing a sustainable lunar settlement.
+- `src/missions.js` - the campaign data.
+- `src/missionRunner.js` - the game engine: player movement, collisions, the rover, mission flow and saving.
+- `src/outpostScene.js` - draws the astronaut (with a proper walking gait), rover, glowing ring and the yellow guide arrow; one chase camera that follows the player.
+- `src/App.jsx` - joystick, keyboard controls, rover button, "How to play" screen, ORION voice and the My Missions window.
 
-The simulation aims to make lunar settlement planning easier to understand through interactive gameplay.
 
-# 🎮 Key Features
+## ORION progression update
 
-- **Lunar Environment:** An interactive lunar surface environment.
-- **Base Development:** Start with a single module and expand the settlement.
-- **Resource Management:** Manage available resources for construction and upgrades.
-- **Missions and Side Quests:** Complete objectives to earn rewards and unlock progress.
-- **Upgrade System:** Improve existing structures and expand capabilities.
-- **Points and Progression:** Track achievements and settlement development.
+- The lunar regolith now uses a warmer, more natural grey-tan surface palette.
+- A new save starts with one habitat module; additional structures are hidden until their matching upgrade is purchased.
+- Building an upgrade updates the 3D scene immediately (greenhouse, recycler tanks, solar array, battery module, shield, rover bay, and research lab).
+- The starting construction wallet and upgrade costs are paced around rover material runs and mission rewards.
+- The Build screen explains Coins, Materials, Science Points, Power, Oxygen, Water and Food.
+- Low oxygen, water and food levels now trigger a visible alert; the alert can pause the simulation so the player can choose a response.
+- After each mission, the player chooses when to begin the next one. The player can pause, build, explore, or take a break first. That choice is saved.
+- HUD controls have been repositioned to reduce overlap between the mission chip, joystick, rover control and ORION.
 
-# 🛠️ Technologies Used
+Run as before from this folder with `npm install` and `npm run dev`.
 
-- Programming Languages:
-  JavaScript (ES modules) for all game logic: App.jsx, missionRunner.js, outpostScene.js, interior.js and missions.js.
-  JSX for the React components.
-  HTML5 and CSS3 for the intro page (index.html) and the entry page (outpost.html).
-- Frontend:
-  React 19 and React DOM for the interface, with hooks such as useSyncExternalStore for the mission runner state.
-  Three.js 0.180 (WebGL) for the 3D lunar outpost, the habitat interior, the astronaut and the rover. All textures are drawn in code with canvas; the only image file is orion.gif.
-  Tailwind CSS 4, via the @tailwindcss/vite plugin, for styling.
-  lucide-react for the icons.
-  Vite 8 with @vitejs/plugin-react for dev server and build.
-  The animated hero intro is plain HTML/CSS/JS. It loads three.js r128 from the cdnjs CDN and the Montserrat font from Google Fonts.
-- Backend:
-  None. The game runs entirely in the browser, and there is no server, database or login.
-  Saving uses browser localStorage, under the keys missionvoid-mission-runner-v2, missionvoid-base-state-v1 and missionvoid-orion-style.
-  NASA responses are cached in sessionStorage for 30 minutes.
-- APIs and Data Sources:
-  NASA APOD API (api.nasa.gov/planetary/apod): Astronomy Picture of the Day.
-  NASA DONKI API, solar flares (api.nasa.gov/DONKI/FLR): flares from the last 30 days.
-  NASA DONKI API, coronal mass ejections (api.nasa.gov/DONKI/CME): CMEs from the last 30 days.
-  NASA Image and Video Library (images-api.nasa.gov/search): Moon pictures, no key needed.
-  The api.nasa.gov endpoints use the shared DEMO_KEY by default, or your own key through VITE_NASA_API_KEY.
--Browser APIs:
-  Web Speech API (speechSynthesis) for the ORION voice.
-  WebGL for the 3D scene.
-  Pointer events, keyboard, ResizeObserver and localStorage/sessionStorage for controls, resizing and saving.
 
-# 🚀 How to Run the Project
+## Latest interface and lunar-environment update
 
-1. Download or clone this repository.
-2. Extract the project files if downloaded as a ZIP.
-3. Open the project folder in your code editor.
-4. Install the required dependencies according to the project setup.
-5. Run the application using the appropriate development command.
-6. Open the application in your browser or supported environment.
+- ORION is positioned at the bottom-middle of the 3D outpost viewport.
+- The Sim Lab button/panel and Grid ON/OFF control have been removed from the gameplay dashboard.
+- Every mission in all six chapters has its own side-quest briefing, objectives, icon and reward values (30 distinct side quests total).
+- The 3D lunar scene now receives a chapter-and-mission-specific seed. Terrain noise, crater placement, scattered environment objects, surface tint and atmospheric fog therefore regenerate when the active mission changes.
+- To see a different landscape, advance to another mission or chapter. Returning to the same mission reproduces that mission's landscape consistently.
 
-**Note:** Refer to the project configuration and setup instructions for the exact commands.
 
-# 🌌 Our Vision
+## Walk inside the habitat (new)
 
-Our vision is to encourage people to explore the possibilities and challenges of sustainable human life beyond Earth.
+- Walk up to the habitat door (the lit entrance on the Moon-facing side of the big round hub). A cyan **Enter the habitat (E)** button appears. Press `E` or tap it.
+- Inside is **Habitat Core**, a cut-away room you can orbit with drag / scroll. Walk with the same keys or joystick. The green **AIRLOCK** door on the near wall is the exit (**Go outside** button / `E` when you stand near it).
+- Every system is in the room, each with a live screen and a status light (green / yellow / red):
+  - **Power:** Solar Controller, Battery Bank (racks fill as you buy Battery Banks), Power Distribution (made vs used, and ON/OFF switches for each machine).
+  - **Life support:** Oxygen Generator, Water Recycler, Thermal Control, Food Garden (greenhouse), Research Bay, Radiation Shield monitor, Crew Quarters and the Command Console with all five resource bars.
+  - Machines you have not bought yet show an **EMPTY BAY** with hazard tape; building the upgrade fills the bay.
+- Stand next to a machine to get an info card with the live numbers and a one-line science tip, and ORION explains it out loud.
+- Missions pause while you are inside and carry on when you step back out.
 
-Through VEYRA, we aim to combine space exploration, resource management, and interactive learning into an engaging experience.
+New file: `src/interior.js` (room layout, machine positions, live readouts). Changed: `missionRunner.js` (indoor walking and enter/exit), `outpostScene.js` (the room, machines and screens), `App.jsx` (ORION position, buttons, info card).
 
-# 👥 Team
 
-**Team Name: Mission Void**
+## Bug-fix pass
 
-**Project: VEYRA – Sustain Life Beyond Earth**
+- **New Simulation / game-over restart left the game frozen.** `resetCampaign()` pauses the runner, but only the in-game Restart button showed the "Let's go!" screen again. The menu's New Simulation and the game-over Restart now show it too, and clear any open crisis, mission and countdown state.
+- **Crisis pop-up could never be closed.** If neither option of an event was affordable (for example the oxygen leak with no coins and no materials) both buttons were disabled and there was no countdown. A "Not enough resources to respond" button now ends the event.
+- **Base progress was lost on reload.** Mission progress was saved, but coins, materials, buildings and resources were not, so a reload wiped what the missions had paid for. The base is now saved to local storage too (and cleared by every restart).
+- **3D scene leaked on every mission change.** Canvas pointer/wheel listeners were never removed and textures were never disposed when the scene was rebuilt. Both are now cleaned up, and the two-finger pinch handler no longer reads a missing pointer.
+- **`npm run build` / `preview` had no game page.** Only `index.html` was built, so START MISSION led to a 404. `vite.config.js` now builds both `index.html` and `outpost.html`.
+- **Dependencies:** `@tailwindcss/vite` / `tailwindcss` raised to `^4.2.2` (first release that supports Vite 8) and the Vite range loosened to `^8.0.0`.
+- README now names the correct folder (`mv_work`).
 
-Developed for the NASA Space Apps Challenge 2026.
 
----
+## NASA lunar dataset source catalog (added without gameplay changes)
 
-# 📦 Project Files
+The folder `public/data/` now contains `nasa-lunar-datasets.json`, a machine-readable catalog of official NASA/PDS lunar datasets relevant to Mission Void:
 
-The complete project submission is available in this repository:
+- **LOLA GDR** — lunar elevation/topography products for terrain and rover-route research.
+- **Diviner GDR** — gridded thermal/brightness-temperature products for lunar temperature context.
+- **LEND RDR** — neutron measurements used to study lunar hydrogen distribution and possible water resources.
+- **CRaTER calibrated data** — radiation/energetic-particle measurements.
+- **LROC imagery** — lunar surface and crater imagery.
 
-MissionVoid_Submission.zip
+Official archive entry points:
+- NASA/PDS LRO mission archive: https://pds-geosciences.wustl.edu/missions/lro/
+- LOLA archive and product browser: https://imbrium.mit.edu/
+- Diviner archive: https://www.diviner.ucla.edu/data
+- NASA PDS LRO data release records: https://pds.nasa.gov/datasearch/subscription-service/SS-20260915.shtml
 
----
+**Important scope note:** This addition is deliberately non-invasive. No gameplay code, mission logic, simulation values, 3D scene, controls, UI, or save data has been changed. The JSON is a source catalog, not a copy of the raw scientific measurements; the NASA archive products are linked rather than bundled. Therefore the current game does not yet consume NASA measurements at runtime. Do not describe the current gameplay as NASA-data-driven until a specific downloaded product has been processed and connected to the relevant simulation feature.
 
-**Built with curiosity, innovation, and a vision beyond Earth. 🌕**
+For a competition submission, cite the exact NASA/PDS product actually used, its product ID/version, and the date accessed. NASA archive metadata confirms that LOLA GDR products include gridded lunar elevation models, while Diviner GDR products include gridded thermal/brightness-temperature products.

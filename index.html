@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>MISSION VOID — Hero Intro</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;500&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#02050d}
+html,body{margin:0;height:100%;background:var(--bg);overflow:hidden;font-family:'Montserrat',system-ui,sans-serif}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+.hero{position:fixed;left:0;right:0;top:16%;text-align:center;pointer-events:none;color:#e9f2ff}
+h1{margin:0;font-weight:300;font-size:clamp(26px,5.4vw,104px);letter-spacing:.38em;margin-right:-.38em;text-shadow:0 0 40px rgba(140,185,255,.28);opacity:0}
+p{margin:1.6em 0 0;font-weight:500;font-size:clamp(12px,1.55vw,27px);letter-spacing:.55em;margin-right:-.55em;color:#a9c2e8;opacity:0}
+#veil{position:fixed;inset:0;background:var(--bg);pointer-events:none}
+.vig{position:fixed;inset:0;pointer-events:none;background:radial-gradient(ellipse at 50% 45%,transparent 55%,rgba(2,5,13,.55) 100%)}
+.fade{position:fixed;left:0;right:0;bottom:0;height:14%;pointer-events:none;background:linear-gradient(transparent,var(--bg))}
+#go{position:relative;margin-top:clamp(28px,4.5vh,56px);pointer-events:none;opacity:0;padding:1.15em 2.6em;font:500 clamp(10px,1.05vw,16px) 'Montserrat',system-ui,sans-serif;letter-spacing:.5em;text-indent:.5em;color:#eaf3ff;background:linear-gradient(180deg,rgba(120,170,255,.16),rgba(40,80,160,.08));border:1px solid rgba(170,205,255,.55);border-radius:2px;cursor:pointer;-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);transition:opacity .9s,box-shadow .35s,border-color .35s,letter-spacing .35s}
+#go.on{opacity:1;pointer-events:auto}
+#go:hover{box-shadow:0 0 34px rgba(120,170,255,.4),inset 0 0 18px rgba(140,190,255,.18);border-color:#cfe3ff;letter-spacing:.56em}
+#go::before,#go::after{content:"";position:absolute;width:10px;height:10px;border:1px solid #cfe3ff}
+#go::before{left:-5px;top:-5px;border-right:0;border-bottom:0}
+#go::after{right:-5px;bottom:-5px;border-left:0;border-top:0}
+#snd{position:fixed;z-index:6;top:calc(env(safe-area-inset-top,0px) + 18px);right:22px;background:transparent;border:1px solid rgba(170,205,255,.3);color:#a9c2e8;font:500 9px 'Montserrat',system-ui,sans-serif;letter-spacing:.3em;padding:.9em 1.2em;border-radius:2px;cursor:pointer;opacity:.75;transition:color .3s,border-color .3s,opacity .3s}
+#snd:hover{color:#eaf3ff;border-color:rgba(200,225,255,.7);opacity:1}
+</style></head><body>
+<canvas id="c"></canvas><div class="vig"></div><div class="fade"></div>
+<div class="hero"><h1 id="t1">MISSION VOID</h1><p id="t2">EXPLORE • BUILD • SURVIVE</p><button id="go" type="button">START MISSION</button></div>
+<div id="veil"></div><button id="snd" type="button" aria-label="Toggle sound">SOUND: OFF</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js" onerror="(function(){var b=document.getElementById('go');if(b){b.classList.add('on');b.textContent='ENTER LUNAR SURFACE';b.onclick=function(){location.assign('/outpost.html')};}})()"></script>
+<script>
+const T=THREE,lerp=(a,b,t)=>a+(b-a)*t,S=(a,b,x)=>{x=Math.min(1,Math.max(0,(x-a)/(b-a)));return x*x*(3-2*x)},R=Math.random;
+const cv=document.getElementById('c'),PR=Math.min(window.devicePixelRatio||1,2.5);
+const rd=new T.WebGLRenderer({canvas:cv,antialias:true});rd.setPixelRatio(PR);rd.setSize(innerWidth,innerHeight);
+rd.toneMapping=T.ACESFilmicToneMapping;rd.toneMappingExposure=1.15;rd.outputEncoding=T.sRGBEncoding;
+const scene=new T.Scene(),cam=new T.PerspectiveCamera(36,innerWidth/innerHeight,.1,6000);
+
+/* environment reflections */
+const ec=document.createElement('canvas');ec.width=512;ec.height=256;const ex=ec.getContext('2d'),eg=ex.createLinearGradient(0,0,0,256);
+eg.addColorStop(0,'#1a2a4a');eg.addColorStop(.5,'#05080f');eg.addColorStop(1,'#0a1020');ex.fillStyle=eg;ex.fillRect(0,0,512,256);ex.fillStyle='#fff';
+[[60,60,120,18],[300,40,90,14],[420,110,60,40],[180,150,140,10]].forEach(r=>ex.fillRect(...r));
+const et=new T.CanvasTexture(ec);et.mapping=T.EquirectangularReflectionMapping;et.encoding=T.sRGBEncoding;
+scene.environment=new T.PMREMGenerator(rd).fromEquirectangular(et).texture;
+
+/* lights */
+const sun=new T.DirectionalLight(0xfff2e2,3.5);sun.position.set(60,40,80);scene.add(sun);
+const fill=new T.DirectionalLight(0x5b8cff,1.4);fill.position.set(-60,10,-80);scene.add(fill);
+scene.add(new T.HemisphereLight(0x6f8fd0,0x05070d,.15));
+
+/* procedural textures */
+const H=(x,y)=>{const n=Math.sin(x*127.1+y*311.7)*43758.5453;return n-Math.floor(n)};
+function vn(x,y,p){const x0=Math.floor(x),y0=Math.floor(y),fx=x-x0,fy=y-y0,u=fx*fx*(3-2*fx),v=fy*fy*(3-2*fy),h=(i,j)=>H(((i%p)+p)%p,j);
+return lerp(lerp(h(x0,y0),h(x0+1,y0),u),lerp(h(x0,y0+1),h(x0+1,y0+1),u),v)}
+function fbm(u,v,f,o,sd){let s=0,a=.5,p=f;for(let i=0;i<o;i++){s+=a*vn(u*p+sd,v*p*.5+sd*7,p);p*=2;a*=.5}return s/(1-Math.pow(.5,o))}
+function mk(w,h,fn,after){const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d'),im=x.createImageData(w,h);
+for(let j=0;j<h;j++)for(let i=0;i<w;i++){const k=(j*w+i)*4,o=fn(i/w,j/h);im.data[k]=o[0];im.data[k+1]=o[1];im.data[k+2]=o[2];im.data[k+3]=255}
+x.putImageData(im,0,0);after&&after(x,w,h);const t=new T.CanvasTexture(c);t.encoding=T.sRGBEncoding;t.anisotropy=8;return t}
+const mix=(a,b,t)=>a.map((v,i)=>lerp(v,b[i],t));
+const planetTex=mk(768,384,(u,v)=>{const h=fbm(u,v,3,5,1),lat=Math.abs(v-.5)*2,land=S(.5,.56,h),cl=S(.52,.75,fbm(u,v,4,4,5));
+let c=mix([8+h*20,34+h*40,80+h*70],[70+h*60,80+h*50,55+h*30],land);c=mix(c,[235,240,250],S(.86,.95,lat+(h-.5)*.15));return mix(c,[245,248,255],cl*.75)});
+const moonTex=mk(768,384,(u,v)=>{const m=fbm(u,v,3,5,2),g=(.42+.3*m)*(1-.35*S(.45,.55,fbm(u,v,2,3,9)))*255;return [g,g,g*1.03]},(x)=>{
+for(let i=0;i<450;i++){const px=R()*768,py=R()*384,r=2+Math.pow(R(),3)*30,g=x.createRadialGradient(px,py,r*.1,px,py,r);
+g.addColorStop(0,'rgba(20,20,22,.35)');g.addColorStop(.7,'rgba(20,20,22,.15)');g.addColorStop(.88,'rgba(255,255,255,.22)');g.addColorStop(1,'rgba(255,255,255,0)');x.fillStyle=g;x.beginPath();x.arc(px,py,r,0,7);x.fill()}});
+function glowTex(){const c=document.createElement('canvas');c.width=c.height=128;const x=c.getContext('2d'),g=x.createRadialGradient(64,64,0,64,64,64);
+g.addColorStop(0,'rgba(255,255,255,1)');g.addColorStop(.25,'rgba(150,200,255,.6)');g.addColorStop(1,'rgba(40,90,255,0)');x.fillStyle=g;x.fillRect(0,0,128,128);return new T.CanvasTexture(c)}
+const GT=glowTex(),sprite=(s,o)=>{const p=new T.Sprite(new T.SpriteMaterial({map:GT,blending:T.AdditiveBlending,transparent:true,depthWrite:false,opacity:o}));p.scale.set(s,s,1);return p};
+
+/* stars */
+function stars(n,wrap,sz){const pos=new Float32Array(n*3),sa=new Float32Array(n);for(let i=0;i<n;i++){
+if(wrap){pos.set([R()*500-250,R()*500-250,R()*500-250],i*3)}else{const a=R()*6.283,b=Math.acos(2*R()-1);pos.set([3000*Math.sin(b)*Math.cos(a),3000*Math.cos(b),3000*Math.sin(b)*Math.sin(a)],i*3)}sa[i]=Math.pow(R(),2.5)}
+const g=new T.BufferGeometry();g.setAttribute('position',new T.BufferAttribute(pos,3));g.setAttribute('sz',new T.BufferAttribute(sa,1));
+const m=new T.ShaderMaterial({transparent:true,depthWrite:false,blending:T.AdditiveBlending,uniforms:{cp:{value:new T.Vector3()},px:{value:PR},wrap:{value:wrap?1:0}},
+vertexShader:`uniform vec3 cp;uniform float px,wrap;attribute float sz;varying float a;varying float k;
+void main(){vec3 rel=wrap>.5?mod(position-cp+250.,500.)-250.:position;vec4 mv=viewMatrix*vec4(wrap>.5?cp+rel:cp+rel,1.);gl_Position=projectionMatrix*mv;
+a=wrap>.5?smoothstep(250.,170.,length(rel))*(.35+.65*sz):.25+.6*sz;k=sz;
+gl_PointSize=wrap>.5?clamp((.8+sz*2.4)*px*(130./max(-mv.z,.1)),.8*px,4.5*px):(.9+sz*1.2)*px;}`,
+fragmentShader:`varying float a;varying float k;void main(){float d=length(gl_PointCoord-.5);gl_FragColor=vec4(mix(vec3(.72,.82,1.),vec3(1.,.95,.9),k),smoothstep(.5,.05,d)*a);}`});
+const p=new T.Points(g,m);p.frustumCulled=false;scene.add(p);return p}
+const near=stars(9500,true),far=stars(14000,false);
+
+/* planet + moon + base */
+const planet=new T.Mesh(new T.SphereGeometry(160,64,48),new T.MeshStandardMaterial({map:planetTex,roughness:.9,metalness:0,emissive:0xffffff,emissiveMap:planetTex,emissiveIntensity:.22}));
+planet.position.set(520,40,-180);scene.add(planet);
+const atm=new T.Mesh(new T.SphereGeometry(160*1.12,48,32),new T.ShaderMaterial({side:T.BackSide,transparent:true,blending:T.AdditiveBlending,depthWrite:false,
+vertexShader:'varying vec3 n;void main(){n=normalize(normalMatrix*normal);gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+fragmentShader:'varying vec3 n;void main(){float i=pow(max(0.,.62-dot(n,vec3(0.,0.,1.))),3.)*2.2;gl_FragColor=vec4(.3,.55,1.,1.)*i;}'}));
+atm.position.copy(planet.position);scene.add(atm);
+const MC=new T.Vector3(25,-140,-400),moon=new T.Mesh(new T.SphereGeometry(100,96,64),new T.MeshStandardMaterial({map:moonTex,bumpMap:moonTex,bumpScale:2,roughness:1,metalness:0}));
+moon.position.copy(MC);scene.add(moon);
+const base=new T.Group(),bd=new T.Vector3(-.05,.5,.86).normalize();base.position.copy(MC).addScaledVector(bd,100);
+base.quaternion.setFromUnitVectors(new T.Vector3(0,1,0),bd);scene.add(base);
+const white=new T.MeshStandardMaterial({color:0xdfe6f0,metalness:.4,roughness:.5}),lamp=new T.MeshBasicMaterial({color:0xbfe0ff});
+[[0,0,3.2],[7,3,2],[-6,2,1.8],[2,-8,2.4]].forEach(([x,z,r])=>{const d=new T.Mesh(new T.SphereGeometry(r,20,10,0,6.283,0,1.571),white);d.position.set(x,-.2,z);base.add(d)});
+[[3.5,1.5,7,.5,1],[-3,1,6,.5,1],[1,-4,.5,.5,8]].forEach(([x,z,w,h,l])=>{const b=new T.Mesh(new T.BoxGeometry(w,h,l),white);b.position.set(x,.2,z);base.add(b)});
+for(let i=0;i<14;i++){const l=new T.Mesh(new T.SphereGeometry(.18,8,6),lamp);l.position.set(R()*18-8,.3,R()*18-9);base.add(l)}
+const pad=new T.Mesh(new T.TorusGeometry(2.6,.1,8,40),lamp);pad.rotation.x=Math.PI/2;pad.position.set(-9,.1,-5);base.add(pad);
+const bg=sprite(16,.55);bg.position.set(0,2,0);base.add(bg);
+
+/* spaceship */
+const ship=new T.Group();scene.add(ship);
+const hullM=new T.MeshStandardMaterial({color:0xc9d3e0,metalness:.85,roughness:.3}),darkM=new T.MeshStandardMaterial({color:0x2b3342,metalness:.9,roughness:.45}),
+panM=new T.MeshStandardMaterial({color:0x10234a,metalness:.7,roughness:.35,emissive:0x061430}),
+cockM=new T.MeshStandardMaterial({color:0x0b1b33,emissive:0x3a78c8,emissiveIntensity:.9,metalness:.5,roughness:.2});
+const add=(g,m,x,y,z)=>{const o=new T.Mesh(g,m);o.position.set(x,y,z);ship.add(o);return o};
+const cyl=(a,b,h)=>{const g=new T.CylinderGeometry(a,b,h,28);g.rotateX(Math.PI/2);return g};
+add(cyl(1.6,.8,9),hullM,0,0,0);
+const nose=new T.ConeGeometry(.8,2.6,28);nose.rotateX(-Math.PI/2);add(nose,hullM,0,0,-5.8);
+add(new T.BoxGeometry(.8,.14,1.8),cockM,0,.8,-3.6);
+add(cyl(1.9,1.6,2.2),darkM,0,0,5.1);add(cyl(1,.75,.9),darkM,0,0,6.65);
+add(new T.BoxGeometry(.4,.3,5),darkM,0,1.45,1.6);
+[-3,-1.2,.6,2.4].forEach(z=>{const r=.8+((z+4.5)/9)*.8+.06,t=add(new T.TorusGeometry(r,.07,8,48),hullM,0,0,z)});
+[-1,1].forEach(s=>{add(cyl(.6,.55,4.4),darkM,s*2.7,-.3,4.2);add(cyl(.72,.5,.7),darkM,s*2.7,-.3,6.75);add(new T.BoxGeometry(1.6,.25,2.2),hullM,s*1.9,-.1,3.6);
+add(new T.BoxGeometry(5.5,.06,2.4),panM,s*5.4,.1,.5);add(new T.BoxGeometry(1.2,.12,.2),darkM,s*2,.1,.5);
+const n=new T.Mesh(new T.SphereGeometry(.1,8,6),lamp);n.position.set(s*8.1,.1,.5);ship.add(n)});
+const nl=new T.Mesh(new T.SphereGeometry(.08,8,6),lamp);nl.position.set(0,0,-7.1);ship.add(nl);
+/* ship upgrade */
+const gc=document.createElement('canvas');gc.width=gc.height=128;const gx=gc.getContext('2d');gx.fillStyle='#10234a';gx.fillRect(0,0,128,128);gx.strokeStyle='#3d6bb8';gx.lineWidth=2;
+for(let i=0;i<=128;i+=32){gx.beginPath();gx.moveTo(i,0);gx.lineTo(i,128);gx.moveTo(0,i);gx.lineTo(128,i);gx.stroke()}
+const gt=new T.CanvasTexture(gc);gt.encoding=T.sRGBEncoding;gt.wrapS=gt.wrapT=T.RepeatWrapping;gt.repeat.set(4,2);panM.map=gt;panM.color.set(0xffffff);panM.needsUpdate=true;
+const lineM=new T.MeshBasicMaterial({color:0x5fa0ff});
+add(new T.TorusGeometry(1,.05,8,36),lineM,0,0,7.1);add(new T.TorusGeometry(.32,.05,8,20),darkM,0,0,-6.2);
+const can=add(new T.SphereGeometry(.55,20,12),cockM,0,.75,-3.2);can.scale.set(.9,.4,2);
+add(new T.BoxGeometry(1.5,.7,4),darkM,0,-1.35,1.2);
+add(new T.BoxGeometry(.12,2.4,2.6),darkM,0,2.7,5);
+const fl=new T.Mesh(new T.SphereGeometry(.08,8,6),lamp);fl.position.set(0,3.95,5.9);ship.add(fl);
+const dish=add(new T.SphereGeometry(.7,20,10,0,6.283,0,1.1),hullM,0,1.95,3.3);dish.rotation.x=-.5;add(new T.CylinderGeometry(.04,.04,1,8),darkM,0,1.8,3.3);
+[[-1.05,.9,-2.8],[1.05,.9,-2.8],[-1.5,.8,2.8],[1.5,.8,2.8]].forEach(p=>add(new T.BoxGeometry(.3,.2,.4),darkM,...p));
+[-1,1].forEach(s=>{const l=add(new T.BoxGeometry(.04,.04,9),lineM,s*1.22,.05,0);l.rotation.y=s*.0887;
+const c=add(new T.BoxGeometry(.14,.5,5.5),darkM,s*1.33,-.25,.5);c.rotation.y=s*.0887;
+[3,4,5].forEach(z=>add(new T.TorusGeometry(.64,.05,8,28),hullM,s*2.7,-.3,z));
+add(new T.TorusGeometry(.6,.035,8,28),lineM,s*2.7,-.3,2.05);add(new T.TorusGeometry(.72,.04,8,28),lineM,s*2.7,-.3,7.1);
+const f=add(new T.BoxGeometry(.12,2.2,2.4),darkM,s*1.7,-1.5,5);f.rotation.z=s*.7;});
+/* redesigned spacecraft */
+ship.clear();
+const pearl=new T.MeshPhysicalMaterial({color:0xe6ebf2,metalness:.55,roughness:.28,clearcoat:1,clearcoatRoughness:.15,side:T.DoubleSide}),
+gra=new T.MeshStandardMaterial({color:0x151a24,metalness:.9,roughness:.4}),
+glass=new T.MeshPhysicalMaterial({color:0x04101f,metalness:.2,roughness:.05,clearcoat:1,emissive:0x16407a,emissiveIntensity:.7}),
+acc=new T.MeshBasicMaterial({color:0x6fb4ff});
+const rf=u=>u<.45?1.25*Math.pow(Math.sin(u/.45*Math.PI/2),.85):u<.8?lerp(1.25,1.4,(u-.45)/.35):lerp(1.4,1.05,(u-.8)/.2);
+const lp=[];for(let i=0;i<=60;i++){const u=i/60;lp.push(new T.Vector2(rf(u),-7.5+u*15))}
+const lg=new T.LatheGeometry(lp,56);lg.rotateX(Math.PI/2);add(lg,pearl,0,0,0).scale.set(1.15,.7,1);
+[-5,-3,-1,1.2,3.3,5.2].forEach(z=>{add(new T.TorusGeometry(rf((z+7.5)/15)+.012,.016,6,56),gra,0,0,z).scale.set(1.15,.7,1)});
+add(new T.SphereGeometry(1,28,14),glass,0,.58,-3.4).scale.set(.55,.3,1.5);
+add(new T.SphereGeometry(1,24,12),pearl,0,.78,1.8).scale.set(.55,.22,3.2);
+add(new T.BoxGeometry(.5,.3,6),gra,0,-.78,1.6);
+const wing=(pts,d)=>{const sh=new T.Shape();pts.forEach((p,i)=>i?sh.lineTo(p[0],p[1]):sh.moveTo(p[0],p[1]));sh.closePath();
+const g=new T.ExtrudeGeometry(sh,{depth:d,bevelEnabled:true,bevelThickness:.03,bevelSize:.04,bevelSegments:2});g.rotateX(Math.PI/2);return g};
+const wg=wing([[1,-1],[6.2,3.6],[6.2,5.2],[1,5.8]],.1),cg=wing([[.9,0],[2.7,1.1],[2.7,1.6],[.9,1.8]],.06);
+[-1,1].forEach(s=>{add(wg,pearl,0,-.12,0).scale.x=s;add(cg,gra,0,-.1,-4.2).scale.x=s;
+add(new T.BoxGeometry(.03,.03,6.9),acc,s*3.6,-.1,1.3).rotation.y=s*.846;
+add(new T.BoxGeometry(.08,1.5,1.5),gra,s*6.1,.55,4.4).rotation.z=-s*.25;
+const tl=add(new T.SphereGeometry(.09,8,6),lamp,s*6.2,-.1,5.2),tg=sprite(1.4,.55);tg.position.copy(tl.position);ship.add(tg);
+add(new T.BoxGeometry(.03,.03,3.4),acc,s*1.58,.1,.6);
+add(cyl(.62,.5,5),pearl,s*1.55,-.15,4.5);add(cyl(.8,.55,.9),gra,s*1.55,-.15,7.45);
+add(new T.CircleGeometry(.62,24),acc,s*1.55,-.15,7.91);add(new T.TorusGeometry(.8,.035,8,32),acc,s*1.55,-.15,7.9);
+add(new T.TorusGeometry(.64,.02,6,32),gra,s*1.55,-.15,3.2)});
+add(cyl(.6,.42,.8),gra,0,0,7.2);add(new T.CircleGeometry(.42,24),acc,0,0,7.61);
+const pg=new T.ConeGeometry(1,1,20,1,true);pg.translate(0,.5,0);pg.rotateX(Math.PI/2);
+const engines=[[0,0,7.65,.5],[-1.55,-.15,7.95,.7],[1.55,-.15,7.95,.7]].map(([x,y,z,r])=>{
+const o=new T.Mesh(pg,new T.MeshBasicMaterial({color:0x6fa8ff,transparent:true,opacity:.35,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide})),
+i=new T.Mesh(pg,new T.MeshBasicMaterial({color:0xdfeeff,transparent:true,opacity:.6,blending:T.AdditiveBlending,depthWrite:false,side:T.DoubleSide})),g=sprite(3,.8);
+[o,i,g].forEach(m=>{m.position.set(x,y,z);ship.add(m)});return{x,y,z,r,o,i,g}});
+/* exhaust particles */
+const NP=500,pp=new Float32Array(NP*3).fill(1e5),pv=new Float32Array(NP*3),pl=new Float32Array(NP),pgm=new T.BufferGeometry();
+pgm.setAttribute('position',new T.BufferAttribute(pp,3));
+const parts=new T.Points(pgm,new T.PointsMaterial({map:GT,size:.5,color:0x9cc8ff,transparent:true,opacity:.8,blending:T.AdditiveBlending,depthWrite:false}));parts.frustumCulled=false;ship.add(parts);
+
+/* timeline */
+let t=0,Z=0,last=performance.now();const t1=document.getElementById('t1'),t2=document.getElementById('t2'),veil=document.getElementById('veil'),tgt=new T.Vector3(),foc=new T.Vector3(8,25,-300);
+function frame(now){const dt=playing?Math.min((now-last)/1000,.05):0;last=now;t+=dt;
+const v=t<10?1.5+46*S(3.9,6.6,t)*(1-.8*S(7.6,10,t)):9.2*Math.exp(-(t-10)*.5);Z+=v*dt;
+const th=(.12+.88*S(3.8,5.6,t))*(1-.35*S(8,10,t));
+ship.position.set(0,Math.sin(t*.4)*.3,-Z);
+const rl=1-S(3.2,4.8,t);ship.rotation.z=rl*(.6*Math.sin(t*.8)+.3);ship.rotation.x=rl*.08*Math.sin(t*.6);
+sun.intensity=3.5*S(.2,2.2,t);fill.intensity=1.4*S(.2,2.2,t);
+const a=-2.6*(1-S(0,4.6,t)),r=lerp(lerp(24,13,S(0,5,t)),70,S(5.5,9.5,t)),h=lerp(lerp(4,-2.6,S(2,5,t)),7,S(5.8,9,t));
+cam.position.set(ship.position.x+Math.sin(a)*r+Math.sin(t*.7)*.15,ship.position.y+h,ship.position.z+Math.cos(a)*r);
+tgt.copy(ship.position).lerp(foc,S(6.8,9.6,t));if(entering){const q=S(0,1.8,te);cam.position.lerp(MC,.32*q);cam.position.x+=20*q;cam.position.y+=8*q;tgt.lerp(base.position,q)}cam.lookAt(tgt);cam.fov=lerp(36,42,S(4,7,t));cam.updateProjectionMatrix();
+near.material.uniforms.cp.value.copy(cam.position);far.position.copy(cam.position);
+engines.forEach(e=>{const L=.4+8*th;e.o.scale.set(e.r,e.r,L);e.i.scale.set(e.r*.5,e.r*.5,L*.55);e.g.scale.setScalar(2+7*th*e.r);e.g.material.opacity=.25+.7*th});
+for(let i=0;i<NP;i++){pl[i]-=dt;if(pl[i]>0){pp[i*3]+=pv[i*3]*dt;pp[i*3+1]+=pv[i*3+1]*dt;pp[i*3+2]+=pv[i*3+2]*dt}
+else if(th>.4&&R()<th*.5){const e=engines[(R()*3)|0];pp.set([e.x+(R()-.5)*e.r,e.y+(R()-.5)*e.r,e.z+.3],i*3);pv.set([(R()-.5)*.8,(R()-.5)*.8,6+R()*12*th],i*3);pl[i]=.6+R()*.9}else pp[i*3+1]=1e5}
+pgm.attributes.position.needsUpdate=true;planet.rotation.y=t*.01;sfx(t,th);
+const k=entering?1-S(0,.8,te):1;if(entering){te+=dt;if(te>3.2){entering=false;te=0}}
+veil.style.opacity=lerp(.55,0,S(0,1.2,t))+(entering?(te<2?S(.8,1.8,te):1-S(2.2,3,te)):0);go.classList.toggle('on',t>9.6&&!entering);
+if(entering&&te>1.8&&!sent){sent=true;dispatchEvent(new CustomEvent('missionvoid:start'));if(GAME_URL)location.assign(GAME_URL)}const o1=S(8.2,9.6,t)*k,o2=S(9,10,t)*k;
+t1.style.opacity=o1;t1.style.filter='blur('+((1-o1)*10)+'px)';t1.style.transform='translateY('+((1-o1)*8)+'px)';t2.style.opacity=o2;
+rd.render(scene,cam);requestAnimationFrame(frame)}
+addEventListener('resize',()=>{rd.setSize(innerWidth,innerHeight);cam.aspect=innerWidth/innerHeight;cam.updateProjectionMatrix()});
+/* Set this to your game's address (page, Roblox link, etc.). Empty = fires a 'missionvoid:start' event and returns to the scene. */
+const GAME_URL='/outpost.html';
+let playing=true,entering=false,te=0,sent=false;const go=document.getElementById('go');
+/* ---------- sound: procedural Web Audio, opt-in, kept quiet ---------- */
+const A={ctx:null,on:false,f:{}};
+function initAudio(){const c=A.ctx=new(window.AudioContext||window.webkitAudioContext)(),sr=c.sampleRate;
+const m=A.m=c.createGain();m.gain.value=0;m.connect(c.destination);
+const L=sr*2.6|0,ir=c.createBuffer(2,L,sr);for(let h=0;h<2;h++){const d=ir.getChannelData(h);for(let i=0;i<L;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/L,2.8)}
+const cv=c.createConvolver();cv.buffer=ir;const rv=A.rv=c.createGain();rv.connect(cv);const rg=c.createGain();rg.gain.value=.55;cv.connect(rg);rg.connect(m);
+const wb=A.wb=c.createBuffer(1,sr*2,sr),wd=wb.getChannelData(0);for(let i=0;i<wd.length;i++)wd[i]=Math.random()*2-1;
+const nb=c.createBuffer(1,sr*3,sr),nd=nb.getChannelData(0);let l=0;for(let i=0;i<nd.length;i++){l=(l+.02*(Math.random()*2-1))/1.02;nd[i]=l*3.5}
+const df=c.createBiquadFilter();df.type='lowpass';df.frequency.value=380;const dg=c.createGain();dg.gain.value=.05;df.connect(dg);dg.connect(m);
+[[55,.5],[55.4,.5],[82.5,.25],[110.3,.15]].forEach(([f,g])=>{const o=c.createOscillator(),x=c.createGain();o.frequency.value=f;x.gain.value=g;o.connect(x);x.connect(df);o.start()});
+const lf=c.createOscillator(),lg=c.createGain();lf.frequency.value=.07;lg.gain.value=120;lf.connect(lg);lg.connect(df.frequency);lf.start();
+const es=c.createBufferSource();es.buffer=nb;es.loop=true;A.ef=c.createBiquadFilter();A.ef.type='lowpass';A.eg=c.createGain();A.eg.gain.value=.03;es.connect(A.ef);A.ef.connect(A.eg);A.eg.connect(m);es.start();
+const eo=A.eo=c.createOscillator();eo.type='triangle';eo.frequency.value=40;A.sg=c.createGain();A.sg.gain.value=.03;eo.connect(A.sg);A.sg.connect(m);eo.start()}
+function tone(f1,f2,d,g,ty='sine',send=.4,at=0){const c=A.ctx,t0=c.currentTime+at,o=c.createOscillator(),e=c.createGain();o.type=ty;o.frequency.setValueAtTime(f1,t0);o.frequency.exponentialRampToValueAtTime(f2,t0+d);
+e.gain.setValueAtTime(0,t0);e.gain.linearRampToValueAtTime(g,t0+.01);e.gain.exponentialRampToValueAtTime(.0001,t0+d);o.connect(e);e.connect(A.m);
+if(send){const s=c.createGain();s.gain.value=send;e.connect(s);s.connect(A.rv)}o.start(t0);o.stop(t0+d+.05)}
+function noise(f1,f2,d,g,ty='bandpass',q=1,att=.01,at=0){const c=A.ctx,t0=c.currentTime+at,s=c.createBufferSource(),fl=c.createBiquadFilter(),e=c.createGain(),sd=c.createGain();
+s.buffer=A.wb;s.loop=true;fl.type=ty;fl.Q.value=q;fl.frequency.setValueAtTime(f1,t0);fl.frequency.exponentialRampToValueAtTime(f2,t0+d);
+e.gain.setValueAtTime(0,t0);e.gain.linearRampToValueAtTime(g,t0+att);e.gain.exponentialRampToValueAtTime(.0001,t0+d);s.connect(fl);fl.connect(e);e.connect(A.m);sd.gain.value=.3;e.connect(sd);sd.connect(A.rv);s.start(t0);s.stop(t0+d+.05)}
+const tick=(p,at=0)=>{noise(4500,4500,.025,.03,'highpass',.7,.003,at);tone(p,p*.9,.05,.02,'sine',.3,at)};
+const uiClick=()=>{noise(5000,5000,.02,.05,'highpass',.7,.003);tone(660,990,.14,.045,'sine',.5)};
+function startSnd(){tone(180,720,.7,.05,'triangle',.5);tone(60,40,1.2,.1,'sine',0);noise(300,3200,1.7,.09,'bandpass',.8,1.2);tone(62,28,1.8,.18,'sine',.4,1.7)}
+function sfx(t,th){if(!A.ctx||!A.on)return;const n=A.ctx.currentTime,f=A.f;
+A.ef.frequency.setTargetAtTime(140+1100*th,n,.15);A.eg.gain.setTargetAtTime(.015+.17*th,n,.15);A.eo.frequency.setTargetAtTime(36+46*th,n,.2);A.sg.gain.setTargetAtTime(.02+.09*th,n,.2);
+if(t>3&&!f.arm){f.arm=1;[1400,1700,1500,2100].forEach((p,i)=>tick(p,[0,.14,.3,.46][i]))}
+if(t>3.8&&!f.ign){f.ign=1;tone(38,95,1.8,.14,'sine',0);noise(150,1400,2,.1,'lowpass',.7,1.5)}
+if(t>5.3&&!f.wh){f.wh=1;noise(250,3200,2.6,.1,'bandpass',.9,1.4)}
+if(t>9&&!f.ch){f.ch=1;[523.25,784,1046.5].forEach((fr,i)=>tone(fr,fr,3.6,.03,'sine',.9,i*.2))}}
+const sb=document.getElementById('snd');
+sb.addEventListener('click',()=>{if(!A.ctx)initAudio();if(A.ctx.state==='suspended')A.ctx.resume();A.on=!A.on;A.m.gain.setTargetAtTime(A.on?.45:0,A.ctx.currentTime,.3);sb.textContent='SOUND: '+(A.on?'ON':'OFF');if(A.on)uiClick()});
+go.addEventListener('pointerenter',()=>{if(A.on)tone(2200,1800,.07,.02,'sine',.3)});
+go.addEventListener('click',()=>{if(entering)return;entering=true;te=0;sent=false;if(!A.ctx)initAudio();if(A.ctx.state==='suspended')A.ctx.resume();if(!A.on){A.on=true;A.m.gain.setTargetAtTime(.45,A.ctx.currentTime,.3);sb.textContent='SOUND: ON'}uiClick();tick(1100,.07);startSnd()});
+addEventListener('keydown',e=>{if(e.key==='r'||e.key==='R'){t=0;Z=0;pl.fill(0);A.f={}}});
+requestAnimationFrame(frame);
+</script></body></html>
